@@ -6,5 +6,9 @@ type Box struct {
 	Name        string
 	Description string
 	ParentBoxID string
-	Things      []*Thing
+}
+
+// Repository represents the methods that have to be exposed by the data layer
+type Repository interface {
+	GetBoxesByEmail(email string) ([]*Box, error)
 }

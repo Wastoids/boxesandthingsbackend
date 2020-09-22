@@ -6,11 +6,6 @@ import (
 	"github.com/Wastoids/boxesandthingsbackend/models"
 )
 
-// Repository represents the contract between the application layer and the data layer
-type Repository interface {
-	GetBoxesByEmail(email string) ([]*models.Box, error)
-}
-
 // BoxServicer represents an interface to the services exposed for boxes
 type BoxServicer interface {
 	GetBoxesByEmail(email string) ([]*models.Box, error)
@@ -18,7 +13,11 @@ type BoxServicer interface {
 
 // BoxService provides an implementation for BoxServicer interface
 type BoxService struct {
-	repository Repository
+	repository models.Repository
+}
+
+func NewBoxService(repo models.Repository) BoxService {
+	return BoxService{repository: repo}
 }
 
 // GetBoxesByEmail is an implementation of the method exposed by BoxServicer
