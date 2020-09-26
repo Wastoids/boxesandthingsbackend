@@ -1,4 +1,4 @@
-package models
+package domain
 
 // Box represents a basic box in the system
 type Box struct {
@@ -8,7 +8,7 @@ type Box struct {
 	ParentBoxID string
 }
 
-// Repository represents the methods that have to be exposed by the data layer
-type Repository interface {
+// BoxRepository represents the methods that have to be exposed by the data layer
+type BoxRepository interface {
 	GetBoxesByEmail(email string) ([]*Box, error)
 }

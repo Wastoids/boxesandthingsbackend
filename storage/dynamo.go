@@ -1,7 +1,9 @@
 package storage
 
 import (
-	"github.com/Wastoids/boxesandthingsbackend/models"
+	"time"
+
+	"github.com/Wastoids/boxesandthingsbackend/domain"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -16,7 +18,16 @@ type box struct {
 	ParentBoxID string `json:"parentBoxID" dynamodbav:"parentBoxID"`
 }
 
+type thing struct {
+	ID          string
+	BoxID       string
+	Name        string
+	Description string
+	ExpiresOn   time.Time
+}
+
 const tableName = "boxesAndThings"
+const gsiName = "thingsByBox"
 
 type dynamo struct {
 	dynamoConn *dynamodb.DynamoDB
@@ -30,7 +41,7 @@ func newDynamo() dynamo {
 	return dynamo{dynamoConn: svc}
 }
 
-func (d dynamo) getBoxesByEmail(email string) ([]*models.Box, error) {
+func (d dynamo) getBoxesByEmail(email string) ([]*domain.Box, error) {
 	params := &dynamodb.QueryInput{
 		TableName:              aws.String(tableName),
 		KeyConditionExpression: aws.String("#email = :emailvalue AND begins_with(#myKey, :bbbbb)"),
@@ -59,8 +70,36 @@ func (d dynamo) getBoxesByEmail(email string) ([]*models.Box, error) {
 	return toBoxDomainModels(boxes), nil
 }
 
-func toBoxDomainModels(boxes []box) []*models.Box {
-	var result []*models.Box
+func (d dynamo) getThingsByBox(boxID string) ([]*domain.Thing, error) {
+	params := &dynamodb.QueryInput{
+		TableName:              aws.String(tableName),
+		IndexName:              aws.String(gsiName),
+		KeyConditionExpression: aws.String("#boxid = :boxvalue"),
+		ExpressionAttributeNames: map[string]*string{
+			"#boxid": aws.String("boxID"),
+		},
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":boxvalue": {S: aws.String(boxID)},
+		},
+	}
+	resp, err := d.dynamoConn.Query(params)
+	if err != nil {
+		logrus.Error("could not get the things by box", err)
+		return nil, err
+	}
+
+	var things []thing
+	err = dynamodbattribute.UnmarshalListOfMaps(resp.Items, &things)
+	if err != nil {
+		logrus.Error("could not unmarshal the response into thing entities", err)
+		return nil, err
+	}
+
+	return toThingDomainModels(things), nil
+}
+
+func toBoxDomainModels(boxes []box) []*domain.Box {
+	var result []*domain.Box
 
 	for _, b := range boxes {
 		result = append(result, toBoxDomainModel(b))
@@ -69,11 +108,31 @@ func toBoxDomainModels(boxes []box) []*models.Box {
 	return result
 }
 
-func toBoxDomainModel(box box) *models.Box {
-	return &models.Box{
+func toBoxDomainModel(box box) *domain.Box {
+	return &domain.Box{
 		Description: box.Description,
 		ID:          box.ID,
 		Name:        box.Name,
 		ParentBoxID: box.ParentBoxID,
+	}
+}
+
+func toThingDomainModels(things []thing) []*domain.Thing {
+	var result []*domain.Thing
+
+	for _, t := range things {
+		result = append(result, toThingDomainModel(t))
+	}
+
+	return result
+}
+
+func toThingDomainModel(thing thing) *domain.Thing {
+	return &domain.Thing{
+		ID:          thing.ID,
+		BoxID:       thing.BoxID,
+		Name:        thing.Name,
+		Description: thing.Description,
+		ExpiresOn:   thing.ExpiresOn,
 	}
 }

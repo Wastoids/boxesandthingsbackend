@@ -1,4 +1,4 @@
-package models
+package domain
 
 import "time"
 
@@ -9,4 +9,9 @@ type Thing struct {
 	Name        string
 	Description string
 	ExpiresOn   time.Time
+}
+
+// ThingRepository represents the repository methods it depends on
+type ThingRepository interface {
+	GetThingsByBox(boxID string) ([]*Thing, error)
 }

@@ -1,27 +1,28 @@
-package services
+package service
 
 import (
 	"errors"
 
-	"github.com/Wastoids/boxesandthingsbackend/models"
+	"github.com/Wastoids/boxesandthingsbackend/domain"
 )
 
 // BoxServicer represents an interface to the services exposed for boxes
 type BoxServicer interface {
-	GetBoxesByEmail(email string) ([]*models.Box, error)
+	GetTopBoxesByEmail(email string) ([]*domain.Box, error)
 }
 
 // BoxService provides an implementation for BoxServicer interface
 type BoxService struct {
-	repository models.Repository
+	repository domain.BoxRepository
 }
 
-func NewBoxService(repo models.Repository) BoxService {
+// NewBoxService is a function which returns an instance of the BoxService
+func NewBoxService(repo domain.BoxRepository) BoxService {
 	return BoxService{repository: repo}
 }
 
-// GetBoxesByEmail is an implementation of the method exposed by BoxServicer
-func (b BoxService) GetBoxesByEmail(email string) ([]*models.Box, error) {
+// GetTopBoxesByEmail is an implementation of the method exposed by BoxServicer
+func (b BoxService) GetTopBoxesByEmail(email string) ([]*domain.Box, error) {
 	if len(email) == 0 {
 		return nil, errors.New("invalid email")
 	}

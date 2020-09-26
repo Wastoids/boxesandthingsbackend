@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/Wastoids/boxesandthingsbackend/models"
+	"github.com/Wastoids/boxesandthingsbackend/domain"
 )
 
 // Repository is a concrete implementation of the repository
@@ -15,6 +15,11 @@ func NewRepository() Repository {
 }
 
 // GetBoxesByEmail gets the boxes of a user by email
-func (r Repository) GetBoxesByEmail(email string) ([]*models.Box, error) {
+func (r Repository) GetBoxesByEmail(email string) ([]*domain.Box, error) {
 	return r.db.getBoxesByEmail(email)
+}
+
+// GetThingsByBox gets the things by box id
+func (r Repository) GetThingsByBox(boxID string) ([]*domain.Thing, error) {
+	return r.db.getThingsByBox(boxID)
 }
